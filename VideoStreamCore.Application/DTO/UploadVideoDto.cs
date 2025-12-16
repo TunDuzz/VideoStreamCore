@@ -5,5 +5,5 @@ namespace VideoStreamCore.Application.DTO;
 public class UploadVideoDto
 {
     public string Title { get; set; }
-    public IFormFile File { get; set; } // IFormFile là kiểu dữ liệu file của ASP.NET Core
+    public IFormFile File { get; set; }
 }
