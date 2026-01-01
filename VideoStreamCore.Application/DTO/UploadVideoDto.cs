@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http; // Cần dùng IFormFile
+﻿using Microsoft.AspNetCore.Http;
 
 namespace VideoStreamCore.Application.DTO;
 

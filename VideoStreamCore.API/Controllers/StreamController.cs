@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VideoStreamCore.Application.Interfaces;
+using VideoStreamCore.Infrastructure.Storage; 
 
 namespace VideoStreamCore.API.Controllers;
 
@@ -8,21 +9,28 @@ namespace VideoStreamCore.API.Controllers;
 public class StreamController : ControllerBase
 {
     private readonly IVideoRepository _repo;
+    private readonly IVideoStorage _storage;
 
-    public StreamController(IVideoRepository repo)
+    public StreamController(IVideoRepository repo, IVideoStorage storage)
     {
         _repo = repo;
+        _storage = storage;
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetVideoStream(Guid id)
     {
         var video = await _repo.GetByIdAsync(id);
-        if (video == null) return NotFound("Không tìm thấy video trong DB.");
-
-        if (!System.IO.File.Exists(video.StoragePath))
-            return NotFound("File gốc đã bị xóa hoặc lỗi đường dẫn.");
-
-        return PhysicalFile(video.StoragePath, "video/mp4", enableRangeProcessing: true);
+        if (video == null) return NotFound("Video does not exist.");
+        var fileUrl = await _storage.GetFileUrlAsync(video.StoragePath);
+        if (_storage is MinioVideoStorage)
+        {
+            return Redirect(fileUrl); 
+        }
+        if (System.IO.File.Exists(fileUrl))
+        {
+            return PhysicalFile(fileUrl, "video/mp4", enableRangeProcessing: true);
+        }
+        return NotFound("Video file not found.");
     }
 }

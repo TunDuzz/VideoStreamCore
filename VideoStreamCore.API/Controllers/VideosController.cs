@@ -26,33 +26,49 @@ public class VideosController : ControllerBase
     public async Task<IActionResult> UploadVideo([FromForm] UploadVideoDto dto)
     {
         if (dto.File == null || dto.File.Length == 0)
-            return BadRequest("Vui lòng chọn file video!");
+            return BadRequest("Please select a video file!");
 
-        // 1. Lưu file gốc
-        var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.File.FileName)}";
-        using var stream = dto.File.OpenReadStream();
-        var savedPath = await _storage.UploadFileAsync(stream, uniqueFileName);
+        var tempPath = Path.GetTempPath();
+        var tempVideoFileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.File.FileName)}";
+        var tempVideoPath = Path.Combine(tempPath, tempVideoFileName);
 
-        // 2. Tạo Thumbnail (An toàn)
-        string thumbPath = string.Empty;
+        using (var stream = new FileStream(tempVideoPath, FileMode.Create))
+        {
+            await dto.File.CopyToAsync(stream);
+        }
+
+        string minioVideoKey = string.Empty;
+        string minioThumbKey = string.Empty;
+        string tempThumbPath = string.Empty;
+
         try
         {
-            thumbPath = await _processor.CreateThumbnailAsync(savedPath);
+            tempThumbPath = await _processor.CreateThumbnailAsync(tempVideoPath);
+            var thumbFileName = Path.GetFileName(tempThumbPath);
+
+            using (var videoStream = new FileStream(tempVideoPath, FileMode.Open, FileAccess.Read))
+            {
+                minioVideoKey = await _storage.UploadFileAsync(videoStream, tempVideoFileName);
+            }
+            minioThumbKey = await _storage.UploadThumbnailAsync(tempThumbPath, thumbFileName);
         }
-        catch
+        catch (Exception ex)
         {
-            // Nếu lỗi tạo thumbnail thì bỏ qua, vẫn cho lưu video thành công
-            // (Sau này có thể dùng Background Job để thử lại sau)
+            return BadRequest($"processing error: {ex.Message}");
+        }
+        finally
+        {
+            if (System.IO.File.Exists(tempVideoPath)) System.IO.File.Delete(tempVideoPath);
+            if (System.IO.File.Exists(tempThumbPath)) System.IO.File.Delete(tempThumbPath);
         }
 
-        // 3. Lưu DB
         var video = new Video
         {
             Title = dto.Title,
             OriginalFileName = dto.File.FileName,
             Size = dto.File.Length,
-            StoragePath = savedPath,
-            ThumbnailPath = thumbPath,
+            StoragePath = minioVideoKey, 
+            ThumbnailPath = minioThumbKey, 
             Status = VideoStatus.Ready
         };
 
@@ -61,10 +77,12 @@ public class VideosController : ControllerBase
 
         return Ok(new
         {
-            Message = "Upload thành công!",
+            Message = "Upload MinIO success!",
             VideoId = video.Id,
-            Thumbnail = thumbPath,
-            StreamUrl = $"{Request.Scheme}://{Request.Host}/api/Stream/{video.Id}"
+            VideoKey = minioVideoKey,
+            ThumbnailKey = minioThumbKey,
+            StreamUrl = $"{Request.Scheme}://{Request.Host}/api/Stream/{video.Id}",
+
         });
     }
 }

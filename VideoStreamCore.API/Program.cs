@@ -11,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseInMemoryDatabase("VideoDb"));
 
-builder.Services.AddScoped<IVideoStorage, LocalVideoStorage>();
+//builder.Services.AddScoped<IVideoStorage, LocalVideoStorage>();
+builder.Services.AddScoped<IVideoStorage, MinioVideoStorage>();
 builder.Services.AddScoped<IVideoRepository, VideoRepository>();
 builder.Services.AddScoped<IVideoProcessor, VideoStreamCore.Infrastructure.Processing.FfmpegVideoProcessor>();
 builder.Services.AddControllers();

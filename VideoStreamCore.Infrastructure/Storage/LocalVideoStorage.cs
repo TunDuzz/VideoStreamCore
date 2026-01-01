@@ -23,4 +23,22 @@ public class LocalVideoStorage : IVideoStorage
         }
         return filePath;
     }
+    public async Task<string> UploadThumbnailAsync(string sourcePath, string fileName)
+    {
+        var destPath = Path.Combine(_uploadFolder, fileName);
+
+        using (var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+        using (var destStream = new FileStream(destPath, FileMode.Create))
+        {
+            await sourceStream.CopyToAsync(destStream);
+        }
+
+        return destPath; 
+    }
+    public Task<string> GetFileUrlAsync(string fileName)
+    {
+        // Với Local, URL chính là đường dẫn file trên ổ cứng
+        var filePath = Path.Combine(_uploadFolder, fileName);
+        return Task.FromResult(filePath);
+    }
 }

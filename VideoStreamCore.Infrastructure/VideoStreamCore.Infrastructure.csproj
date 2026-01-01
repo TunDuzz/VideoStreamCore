@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Minio" Version="7.0.0" />
     <PackageReference Include="Xabe.FFmpeg" Version="6.0.2" />
   </ItemGroup>
 
