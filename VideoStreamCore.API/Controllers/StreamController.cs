@@ -29,7 +29,7 @@ public class StreamController : ControllerBase
         }
         if (System.IO.File.Exists(fileUrl))
         {
-            return PhysicalFile(fileUrl, "video/mp4", enableRangeProcessing: true);
+            return PhysicalFile(fileUrl, video.ContentType, enableRangeProcessing: true);
         }
         return NotFound("Video file not found.");
     }

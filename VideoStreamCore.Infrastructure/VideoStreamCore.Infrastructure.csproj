@@ -3,6 +3,8 @@
   <ItemGroup>
     <PackageReference Include="Minio" Version="7.0.0" />
     <PackageReference Include="Xabe.FFmpeg" Version="6.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

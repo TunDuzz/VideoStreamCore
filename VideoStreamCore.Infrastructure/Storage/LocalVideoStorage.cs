@@ -37,7 +37,6 @@ public class LocalVideoStorage : IVideoStorage
     }
     public Task<string> GetFileUrlAsync(string fileName)
     {
-        // Với Local, URL chính là đường dẫn file trên ổ cứng
         var filePath = Path.Combine(_uploadFolder, fileName);
         return Task.FromResult(filePath);
     }

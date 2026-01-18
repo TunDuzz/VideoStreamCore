@@ -1,6 +1,7 @@
 ﻿using Minio;
 using Minio.DataModel.Args;
 using VideoStreamCore.Application.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace VideoStreamCore.Infrastructure.Storage;
 
@@ -10,11 +11,14 @@ public class MinioVideoStorage : IVideoStorage
     private const string VideoBucket = "videos";
     private const string ImageBucket = "images";
 
-    public MinioVideoStorage()
+    private readonly IConfiguration _config;
+    
+    public MinioVideoStorage(IConfiguration config)
     {
+        _config = config;
         _minioClient = new MinioClient()
-            .WithEndpoint("localhost:9000")
-            .WithCredentials("admin", "12345678")
+            .WithEndpoint(_config["Minio:Endpoint"] ?? "localhost:9000")
+            .WithCredentials(_config["Minio:AccessKey"], _config["Minio:SecretKey"])
             .WithSSL(false)
             .Build();
     }
@@ -62,7 +66,7 @@ public class MinioVideoStorage : IVideoStorage
         var args = new PresignedGetObjectArgs()
        .WithBucket(VideoBucket)
        .WithObject(fileName)
-       .WithExpiry(60 * 60); // 3600 giây = 1 giờ
+       .WithExpiry(60 * 60);
 
         return await _minioClient.PresignedGetObjectAsync(args);
     }

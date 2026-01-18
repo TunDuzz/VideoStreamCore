@@ -31,4 +31,10 @@ public class FfmpegVideoProcessor : IVideoProcessor
 
         return outputPath;
     }
+
+    public async Task<double> GetDurationAsync(string videoPath)
+    {
+        IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo(videoPath);
+        return mediaInfo.Duration.TotalSeconds;
+    }
 }

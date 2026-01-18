@@ -9,4 +9,5 @@ namespace VideoStreamCore.Application.Interfaces;
 public interface IVideoProcessor
 {
     Task<string> CreateThumbnailAsync(string videoPath);
+    Task<double> GetDurationAsync(string videoPath);
 }

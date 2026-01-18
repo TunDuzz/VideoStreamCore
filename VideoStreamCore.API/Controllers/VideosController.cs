@@ -58,8 +58,16 @@ public class VideosController : ControllerBase
         }
         finally
         {
-            if (System.IO.File.Exists(tempVideoPath)) System.IO.File.Delete(tempVideoPath);
             if (System.IO.File.Exists(tempThumbPath)) System.IO.File.Delete(tempThumbPath);
+        }
+        double duration = 0;
+        try 
+        {
+             duration = await _processor.GetDurationAsync(tempVideoPath);
+        }
+        catch
+        {
+             duration = 0;
         }
 
         var video = new Video
@@ -67,11 +75,13 @@ public class VideosController : ControllerBase
             Title = dto.Title,
             OriginalFileName = dto.File.FileName,
             Size = dto.File.Length,
+            Duration = duration,
             StoragePath = minioVideoKey, 
             ThumbnailPath = minioThumbKey, 
             Status = VideoStatus.Ready
         };
 
+        if (System.IO.File.Exists(tempVideoPath)) System.IO.File.Delete(tempVideoPath);
         await _repo.AddAsync(video);
         await _repo.SaveChangesAsync();
 
@@ -82,7 +92,6 @@ public class VideosController : ControllerBase
             VideoKey = minioVideoKey,
             ThumbnailKey = minioThumbKey,
             StreamUrl = $"{Request.Scheme}://{Request.Host}/api/Stream/{video.Id}",
-
         });
     }
 }
